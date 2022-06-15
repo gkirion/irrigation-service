@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import com.george.model.SensorValue;
 
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
@@ -42,6 +43,8 @@ public class App implements CommandLineRunner {
                 String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
                 LOGGER.info("consumerTag: {}", consumerTag);
                 LOGGER.info("message: {}", message);
+                SensorValue sensorValue = OBJECT_MAPPER.readValue(message, SensorValue.class);
+                LOGGER.info("{}", sensorValue);
             }, consumerTag -> { LOGGER.info("consumer shutdown"); });
     }
 
