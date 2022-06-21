@@ -1,6 +1,9 @@
 package com.george.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.george.exception.ArduinoServiceException;
+import com.george.model.IrrigationAction;
+import com.george.model.IrrigationStatus;
 import com.george.model.LandStatus;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -30,6 +33,8 @@ public class IrrigationService implements CommandLineRunner {
     @Autowired
     private ArduinoService arduinoService;
 
+    private IrrigationStrategy irrigationStrategy = new IrrigationStrategy(250.0, 650.0);
+
     @Override
     public void run(String... args) throws Exception {
         ConnectionFactory connectionFactory = new ConnectionFactory();
@@ -39,11 +44,29 @@ public class IrrigationService implements CommandLineRunner {
         Channel channel = connection.createChannel();
         channel.queueDeclare(QUEUE_NAME, false, false, false, null);
         channel.basicConsume(QUEUE_NAME, true, (consumerTag, delivery) -> {
+
             String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
             LOGGER.info("consumerTag: {}", consumerTag);
             LOGGER.info("message: {}", message);
             LandStatus landStatus = OBJECT_MAPPER.readValue(message, LandStatus.class);
             LOGGER.info("{}", landStatus);
+
+            IrrigationStatus irrigationStatus = landStatus.getIrrigationStatus();
+            IrrigationAction irrigationAction = irrigationStrategy.evaluateAction(landStatus.getMoisture());
+
+            if (irrigationStatus == IrrigationStatus.OFF && irrigationAction == IrrigationAction.START) {
+                try {
+                    arduinoService.setIrrigationStatus(IrrigationStatus.ON);
+                } catch (ArduinoServiceException e) {
+                    e.printStackTrace();
+                }
+            } else if (irrigationStatus == IrrigationStatus.ON && irrigationAction == IrrigationAction.STOP) {
+                try {
+                    arduinoService.setIrrigationStatus(IrrigationStatus.OFF);
+                } catch (ArduinoServiceException e) {
+                    e.printStackTrace();
+                }
+            }
 
         }, consumerTag -> { LOGGER.info("consumer shutdown"); });
     }

@@ -24,17 +24,18 @@ public class ArduinoWebClient implements ArduinoService {
 
     @Override
     public IrrigationStatus getIrrigationStatus() throws ArduinoServiceException {
+
         HttpRequest httpRequest = HttpRequest
                 .newBuilder(URI.create("http://" + arduinoServiceHost + ":" + arduinoServicePort + "/arduino/status"))
                 .header("Content-Type", "application/json")
                 .GET()
                 .build();
+
         HttpResponse<String> response = null;
         try {
             response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException e) {
-            throw new ArduinoServiceException(e);
-        } catch (InterruptedException e) {
+
+        } catch (IOException | InterruptedException e) {
             throw new ArduinoServiceException(e);
         }
         if (response.statusCode() != 200) {
@@ -45,17 +46,18 @@ public class ArduinoWebClient implements ArduinoService {
 
     @Override
     public IrrigationStatus setIrrigationStatus(IrrigationStatus irrigationStatus) throws ArduinoServiceException {
+
         HttpRequest httpRequest = HttpRequest
                 .newBuilder(URI.create("http://" + arduinoServiceHost + ":" + arduinoServicePort + "/arduino/status"))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(String.format("\"%s\"", irrigationStatus.name())))
                 .build();
+
         HttpResponse<String> response = null;
         try {
             response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException e) {
-            throw new ArduinoServiceException(e);
-        } catch (InterruptedException e) {
+
+        } catch (IOException | InterruptedException e) {
             throw new ArduinoServiceException(e);
         }
         if (response.statusCode() != 200) {
