@@ -8,7 +8,7 @@ public class IrrigationStrategy {
     private Double maxMoistureThreshold;
 
     /**
-    *  @param minMoistureThreshold The min moisture, any value below that will activate the irrigation
+     * @param minMoistureThreshold The min moisture, any value below that will activate the irrigation
      * @param maxMoistureThreshold The max moisture, any value above that will deactivate the irrigation
      * @throws IllegalArgumentException If minMoistureThreshold is not less than maxMoistureThreshold
     */

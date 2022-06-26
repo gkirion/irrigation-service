@@ -1,22 +1,23 @@
 package com.george.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.george.exception.ArduinoServiceException;
 import com.george.model.IrrigationAction;
 import com.george.model.IrrigationStatus;
 import com.george.model.LandStatus;
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Service;
 
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 public class IrrigationService implements CommandLineRunner {
@@ -30,10 +31,9 @@ public class IrrigationService implements CommandLineRunner {
     @Value("${rabbitmq-host:localhost}")
     private String rabbitMQHost;
 
-    @Autowired
-    private ArduinoService arduinoService;
-
     private IrrigationStrategy irrigationStrategy = new IrrigationStrategy(250.0, 650.0);
+
+    private Set<String> registeredExchanges = new HashSet<>();
 
     @Override
     public void run(String... args) throws Exception {
@@ -43,6 +43,7 @@ public class IrrigationService implements CommandLineRunner {
         Connection connection = connectionFactory.newConnection();
         Channel channel = connection.createChannel();
         channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+
         channel.basicConsume(QUEUE_NAME, true, (consumerTag, delivery) -> {
 
             String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
@@ -51,21 +52,20 @@ public class IrrigationService implements CommandLineRunner {
             LandStatus landStatus = OBJECT_MAPPER.readValue(message, LandStatus.class);
             LOGGER.info("{}", landStatus);
 
+            if (!registeredExchanges.contains(landStatus.getPlace())) {
+                AMQP.Exchange.DeclareOk declareOk = channel.exchangeDeclare(landStatus.getPlace(), "fanout");
+                LOGGER.info("declared exchange {}", declareOk);
+                registeredExchanges.add(landStatus.getPlace());
+            }
+
             IrrigationStatus irrigationStatus = landStatus.getIrrigationStatus();
             IrrigationAction irrigationAction = irrigationStrategy.evaluateAction(landStatus.getMoisture());
 
             if (irrigationStatus == IrrigationStatus.OFF && irrigationAction == IrrigationAction.START) {
-                try {
-                    arduinoService.setIrrigationStatus(IrrigationStatus.ON);
-                } catch (ArduinoServiceException e) {
-                    e.printStackTrace();
-                }
+                channel.basicPublish(landStatus.getPlace(), "", null, OBJECT_MAPPER.writeValueAsBytes(IrrigationStatus.ON));
+
             } else if (irrigationStatus == IrrigationStatus.ON && irrigationAction == IrrigationAction.STOP) {
-                try {
-                    arduinoService.setIrrigationStatus(IrrigationStatus.OFF);
-                } catch (ArduinoServiceException e) {
-                    e.printStackTrace();
-                }
+                channel.basicPublish(landStatus.getPlace(), "", null, OBJECT_MAPPER.writeValueAsBytes(IrrigationStatus.OFF));
             }
 
         }, consumerTag -> { LOGGER.info("consumer shutdown"); });
