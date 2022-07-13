@@ -16,8 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.HashSet;
-import java.util.Set;
 
 @Service
 public class IrrigationService implements CommandLineRunner {
@@ -28,12 +26,12 @@ public class IrrigationService implements CommandLineRunner {
 
     private static final String QUEUE_NAME = "sensors-queue";
 
+    private static final String EXCHANGE_NAME = "commands-exchange";
+
     @Value("${rabbitmq-host:localhost}")
     private String rabbitMQHost;
 
     private IrrigationStrategy irrigationStrategy = new IrrigationStrategy(250.0, 650.0);
-
-    private Set<String> registeredExchanges = new HashSet<>();
 
     @Override
     public void run(String... args) throws Exception {
@@ -44,6 +42,10 @@ public class IrrigationService implements CommandLineRunner {
         Channel channel = connection.createChannel();
         channel.queueDeclare(QUEUE_NAME, false, false, false, null);
 
+        AMQP.Exchange.DeclareOk declareOk = channel.exchangeDeclare(EXCHANGE_NAME, "direct");
+        LOGGER.info("declared exchange {}", declareOk);
+
+
         channel.basicConsume(QUEUE_NAME, true, (consumerTag, delivery) -> {
 
             String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
@@ -52,20 +54,16 @@ public class IrrigationService implements CommandLineRunner {
             LandStatus landStatus = OBJECT_MAPPER.readValue(message, LandStatus.class);
             LOGGER.info("{}", landStatus);
 
-            if (!registeredExchanges.contains(landStatus.getPlace())) {
-                AMQP.Exchange.DeclareOk declareOk = channel.exchangeDeclare(landStatus.getPlace(), "fanout");
-                LOGGER.info("declared exchange {}", declareOk);
-                registeredExchanges.add(landStatus.getPlace());
-            }
-
             IrrigationStatus irrigationStatus = landStatus.getIrrigationStatus();
             IrrigationAction irrigationAction = irrigationStrategy.evaluateAction(landStatus.getMoisture());
 
             if (irrigationStatus == IrrigationStatus.OFF && irrigationAction == IrrigationAction.START) {
-                channel.basicPublish(landStatus.getPlace(), "", null, OBJECT_MAPPER.writeValueAsBytes(IrrigationStatus.ON));
+                LOGGER.info("setting irrigation status to: {}", IrrigationStatus.ON);
+                channel.basicPublish(EXCHANGE_NAME, landStatus.getPlace(), null, OBJECT_MAPPER.writeValueAsBytes(IrrigationStatus.ON));
 
             } else if (irrigationStatus == IrrigationStatus.ON && irrigationAction == IrrigationAction.STOP) {
-                channel.basicPublish(landStatus.getPlace(), "", null, OBJECT_MAPPER.writeValueAsBytes(IrrigationStatus.OFF));
+                LOGGER.info("setting irrigation status to: {}", IrrigationStatus.OFF);
+                channel.basicPublish(EXCHANGE_NAME, landStatus.getPlace(), null, OBJECT_MAPPER.writeValueAsBytes(IrrigationStatus.OFF));
             }
 
         }, consumerTag -> { LOGGER.info("consumer shutdown"); });
