@@ -10,6 +10,7 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,9 @@ public class IrrigationService implements CommandLineRunner {
 
     private IrrigationStrategy irrigationStrategy = new IrrigationStrategy(250.0, 650.0);
 
+    @Autowired
+    private SensorReadingService sensorReadingService;
+
     @Override
     public void run(String... args) throws Exception {
         ConnectionFactory connectionFactory = new ConnectionFactory();
@@ -53,6 +57,12 @@ public class IrrigationService implements CommandLineRunner {
             LOGGER.info("message: {}", message);
             LandStatus landStatus = OBJECT_MAPPER.readValue(message, LandStatus.class);
             LOGGER.info("{}", landStatus);
+
+            try {
+                sensorReadingService.insert(landStatus);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
             IrrigationStatus irrigationStatus = landStatus.getIrrigationStatus();
             IrrigationAction irrigationAction = irrigationStrategy.evaluateAction(landStatus.getMoisture());
