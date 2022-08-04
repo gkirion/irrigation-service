@@ -32,7 +32,8 @@ public class IrrigationService implements CommandLineRunner {
     @Value("${rabbitmq-host:localhost}")
     private String rabbitMQHost;
 
-    private IrrigationStrategy irrigationStrategy = new IrrigationStrategy(250.0, 650.0);
+    @Autowired
+    private IrrigationStrategy irrigationStrategy;
 
     @Autowired
     private SensorReadingService sensorReadingService;
@@ -65,15 +66,22 @@ public class IrrigationService implements CommandLineRunner {
             }
 
             IrrigationStatus irrigationStatus = landStatus.getIrrigationStatus();
-            IrrigationAction irrigationAction = irrigationStrategy.evaluateAction(landStatus.getMoisture());
 
-            if (irrigationStatus == IrrigationStatus.OFF && irrigationAction == IrrigationAction.START) {
-                LOGGER.info("setting irrigation status to: {}", IrrigationStatus.ON);
-                channel.basicPublish(EXCHANGE_NAME, landStatus.getPlace(), null, OBJECT_MAPPER.writeValueAsBytes(IrrigationStatus.ON));
+            try {
 
-            } else if (irrigationStatus == IrrigationStatus.ON && irrigationAction == IrrigationAction.STOP) {
-                LOGGER.info("setting irrigation status to: {}", IrrigationStatus.OFF);
-                channel.basicPublish(EXCHANGE_NAME, landStatus.getPlace(), null, OBJECT_MAPPER.writeValueAsBytes(IrrigationStatus.OFF));
+                IrrigationAction irrigationAction = irrigationStrategy.evaluateAction(landStatus.getPlace(), landStatus.getMoisture());
+
+                if (irrigationStatus == IrrigationStatus.OFF && irrigationAction == IrrigationAction.START) {
+                    LOGGER.info("setting irrigation status to: {}", IrrigationStatus.ON);
+                    channel.basicPublish(EXCHANGE_NAME, landStatus.getPlace(), null, OBJECT_MAPPER.writeValueAsBytes(IrrigationStatus.ON));
+
+                } else if (irrigationStatus == IrrigationStatus.ON && irrigationAction == IrrigationAction.STOP) {
+                    LOGGER.info("setting irrigation status to: {}", IrrigationStatus.OFF);
+                    channel.basicPublish(EXCHANGE_NAME, landStatus.getPlace(), null, OBJECT_MAPPER.writeValueAsBytes(IrrigationStatus.OFF));
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
 
         }, consumerTag -> { LOGGER.info("consumer shutdown"); });

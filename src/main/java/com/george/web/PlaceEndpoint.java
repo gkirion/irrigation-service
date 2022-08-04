@@ -1,7 +1,9 @@
 package com.george.web;
 
+import com.george.exception.InvalidThresholdsException;
+import com.george.exception.PlaceNotFoundException;
 import com.george.model.Place;
-import com.george.repository.PlaceRepository;
+import com.george.service.PlaceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,21 +20,36 @@ public class PlaceEndpoint {
     private static final Logger LOGGER = LoggerFactory.getLogger(PlaceEndpoint.class);
 
     @Autowired
-    private PlaceRepository placeRepository;
+    private PlaceService placeService;
 
     @GetMapping
     public List<Place> getAllPlaces() {
-        return placeRepository.findAll();
+        return placeService.findAll();
     }
 
     @GetMapping("/{id}")
-    public Place getPlace(@PathVariable UUID id) throws Exception {
-        return placeRepository.findById(id).orElseThrow(() -> new Exception("place with id " + id + " does not exist"));
+    public Place getPlace(@PathVariable UUID id) throws PlaceNotFoundException {
+        return placeService.findById(id);
     }
 
     @PostMapping
-    public Place createPlace(@RequestBody Place place) {
-        return placeRepository.save(place);
+    public Place createPlace(@RequestBody Place place) throws InvalidThresholdsException {
+        return placeService.create(place);
+    }
+
+    @PutMapping("/{id}")
+    public Place update(@PathVariable UUID id, @RequestBody Place place) throws PlaceNotFoundException, InvalidThresholdsException {
+        return placeService.update(id, place);
+    }
+
+    @PatchMapping("/{id}/name")
+    public Place updateName(@PathVariable UUID id, @RequestBody Place place) throws PlaceNotFoundException {
+        return placeService.updateName(id, place);
+    }
+
+    @PatchMapping("/{id}/thresholds")
+    public Place updateThresholds(@PathVariable UUID id, @RequestBody Place place) throws PlaceNotFoundException, InvalidThresholdsException {
+        return placeService.updateThresholds(id, place);
     }
 
 }

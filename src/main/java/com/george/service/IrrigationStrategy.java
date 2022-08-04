@@ -1,35 +1,22 @@
 package com.george.service;
 
+import com.george.exception.PlaceNotFoundException;
 import com.george.model.IrrigationAction;
+import com.george.model.Place;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+@Service
 public class IrrigationStrategy {
 
-    private Double minMoistureThreshold;
-    private Double maxMoistureThreshold;
+    @Autowired
+    private PlaceService placeService;
 
-    /**
-     * @param minMoistureThreshold The min moisture, any value below that will activate the irrigation.
-     * @param maxMoistureThreshold The max moisture, any value above that will deactivate the irrigation.
-     * @throws IllegalArgumentException If minMoistureThreshold is not less than maxMoistureThreshold.
-    */
-    public IrrigationStrategy(Double minMoistureThreshold, Double maxMoistureThreshold) {
+    public IrrigationAction evaluateAction(String placeName, Double moisture) throws PlaceNotFoundException {
 
-        if (minMoistureThreshold >= maxMoistureThreshold) {
-            throw new IllegalArgumentException("min moisture threshold must be less than max moisture threshold");
-        }
-        this.minMoistureThreshold = minMoistureThreshold;
-        this.maxMoistureThreshold = maxMoistureThreshold;
-    }
-
-    public Double getMinMoistureThreshold() {
-        return minMoistureThreshold;
-    }
-
-    public Double getMaxMoistureThreshold() {
-        return maxMoistureThreshold;
-    }
-
-    public IrrigationAction evaluateAction(Double moisture) {
+        Place place = placeService.findByName(placeName);
+        Double minMoistureThreshold = place.getMinMoistureThreshold();
+        Double maxMoistureThreshold = place.getMaxMoistureThreshold();
 
         if (moisture < minMoistureThreshold) {
             return IrrigationAction.START;

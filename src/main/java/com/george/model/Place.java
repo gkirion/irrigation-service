@@ -13,8 +13,14 @@ public class Place {
     @Column(name = "id", columnDefinition = "BINARY(16)")
     private UUID id;
 
-    @Column(name = "name", unique = true)
+    @Column(name = "name", unique = true, nullable = false)
     private String name;
+
+    @Column(name = "min_moisture_threshold", nullable = false)
+    private Double minMoistureThreshold;
+
+    @Column(name = "max_moisture_threshold", nullable = false)
+    private Double maxMoistureThreshold;
 
     public UUID getId() {
         return id;
@@ -30,6 +36,28 @@ public class Place {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Double getMinMoistureThreshold() {
+        return minMoistureThreshold;
+    }
+
+    /**
+     * @param minMoistureThreshold The min moisture, any value below that will activate the irrigation.
+     */
+    public void setMinMoistureThreshold(Double minMoistureThreshold) {
+        this.minMoistureThreshold = minMoistureThreshold;
+    }
+
+    public Double getMaxMoistureThreshold() {
+        return maxMoistureThreshold;
+    }
+
+    /**
+     * @param maxMoistureThreshold The max moisture, any value above that will deactivate the irrigation.
+     */
+    public void setMaxMoistureThreshold(Double maxMoistureThreshold) {
+        this.maxMoistureThreshold = maxMoistureThreshold;
     }
 
     @Override
@@ -51,6 +79,8 @@ public class Place {
         return "Place{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", minMoistureThreshold=" + minMoistureThreshold +
+                ", maxMoistureThreshold=" + maxMoistureThreshold +
                 '}';
     }
 
