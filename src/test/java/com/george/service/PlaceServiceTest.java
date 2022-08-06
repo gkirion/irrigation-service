@@ -31,8 +31,22 @@ public class PlaceServiceTest {
     }
 
     @Test
+    public void placeNameEmptyTest() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> placeService.create(new Place()));
+    }
+
+    @Test
+    public void placeThresholdMissingTest() {
+        Place place = new Place();
+        place.setName("my pot");
+        place.setMinMoistureThreshold(200.0);
+        Assertions.assertThrows(IllegalArgumentException.class, () -> placeService.create(place));
+    }
+
+    @Test
     public void minEqualToMaxMoistureTest() {
         Place place = new Place();
+        place.setName("my pot");
         place.setMinMoistureThreshold(200.0);
         place.setMaxMoistureThreshold(200.0);
         Assertions.assertThrows(InvalidThresholdsException.class, () -> placeService.create(place));
@@ -41,6 +55,7 @@ public class PlaceServiceTest {
     @Test
     public void minMoreThanMaxMoistureTest() {
         Place place = new Place();
+        place.setName("my pot");
         place.setMinMoistureThreshold(250.0);
         place.setMaxMoistureThreshold(200.0);
         Assertions.assertThrows(InvalidThresholdsException.class, () -> placeService.create(place));
@@ -49,6 +64,7 @@ public class PlaceServiceTest {
     @Test
     public void minLessThanMaxMoistureTest() {
         Place place = new Place();
+        place.setName("my pot");
         place.setMinMoistureThreshold(200.0);
         place.setMaxMoistureThreshold(250.0);
         Assertions.assertDoesNotThrow(() -> placeService.create(place));

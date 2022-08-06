@@ -20,8 +20,11 @@ public class PlaceService {
     @Autowired
     private PlaceRepository placeRepository;
 
-    public Place create(Place place) throws InvalidThresholdsException {
+    public Place create(Place place) throws IllegalArgumentException, InvalidThresholdsException {
         LOGGER.info("creating place {}", place);
+        if (place.getName() == null || place.getName().isBlank()) {
+            throw new IllegalArgumentException("place name can't be empty");
+        }
         if (!isValidThresholds(place.getMinMoistureThreshold(), place.getMaxMoistureThreshold())) {
             throw new InvalidThresholdsException("min moisture threshold must be less than max moisture threshold");
         }
@@ -43,7 +46,7 @@ public class PlaceService {
         return placeRepository.findAll();
     }
 
-    public Place update(UUID id, Place updatedPlace) throws PlaceNotFoundException, InvalidThresholdsException {
+    public Place update(UUID id, Place updatedPlace) throws PlaceNotFoundException, IllegalArgumentException, InvalidThresholdsException {
         LOGGER.info("update place with id: {}", id);
         Place place = placeRepository.findById(id).orElseThrow(() -> new PlaceNotFoundException("place with id " + id + " does not exist"));
 
@@ -51,17 +54,23 @@ public class PlaceService {
         place.setMinMoistureThreshold(updatedPlace.getMinMoistureThreshold());
         place.setMaxMoistureThreshold(updatedPlace.getMaxMoistureThreshold());
 
+        if (place.getName() == null || place.getName().isBlank()) {
+            throw new IllegalArgumentException("place name can't be empty");
+        }
         if (!isValidThresholds(place.getMinMoistureThreshold(), place.getMaxMoistureThreshold())) {
             throw new InvalidThresholdsException("min moisture threshold must be less than max moisture threshold");
         }
         return placeRepository.save(place);
     }
 
-    public Place updateName(UUID id, Place updatedPlace) throws PlaceNotFoundException {
+    public Place updateName(UUID id, Place updatedPlace) throws PlaceNotFoundException, IllegalArgumentException {
         LOGGER.info("update place name with id: {}", id);
         Place place = placeRepository.findById(id).orElseThrow(() -> new PlaceNotFoundException("place with id " + id + " does not exist"));
 
         place.setName(updatedPlace.getName());
+        if (place.getName() == null || place.getName().isBlank()) {
+            throw new IllegalArgumentException("place name can't be empty");
+        }
         return placeRepository.save(place);
     }
 
@@ -79,11 +88,15 @@ public class PlaceService {
     }
 
     /**
-     * @param minMoistureThreshold The min moisture, any value below that will activate the irrigation.
-     * @param maxMoistureThreshold The max moisture, any value above that will deactivate the irrigation.
-     * @return false If minMoistureThreshold is not less than maxMoistureThreshold, true otherwise
+     * @param minMoistureThreshold the min moisture, any value below that will activate irrigation.
+     * @param maxMoistureThreshold the max moisture, any value above that will deactivate irrigation.
+     * @return false if minMoistureThreshold is not less than maxMoistureThreshold, true otherwise
+     * @throws IllegalArgumentException if min or max threshold is null
      */
     private boolean isValidThresholds(Double minMoistureThreshold, Double maxMoistureThreshold) {
+        if (minMoistureThreshold == null || maxMoistureThreshold == null) {
+            throw new IllegalArgumentException("both min and max threshold must be specified");
+        }
         if (minMoistureThreshold >= maxMoistureThreshold) {
             return false;
         }
