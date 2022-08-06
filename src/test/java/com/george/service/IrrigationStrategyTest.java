@@ -32,17 +32,23 @@ public class IrrigationStrategyTest {
     }
 
     @Test
-    public void shouldStartIrrigationTest() throws Exception {
+    public void placeNotFoundTest() {
+        Mockito.when(placeService.findByName(Mockito.anyString())).thenThrow(new PlaceNotFoundException(""));
+        Assertions.assertThrows(PlaceNotFoundException.class, () -> irrigationStrategy.evaluateAction("", 180.0));
+    }
+
+    @Test
+    public void shouldStartIrrigationTest() {
         Assertions.assertEquals(IrrigationAction.START, irrigationStrategy.evaluateAction("", 180.0));
     }
 
     @Test
-    public void shouldStopIrrigationTest() throws Exception {
+    public void shouldStopIrrigationTest() {
         Assertions.assertEquals(IrrigationAction.STOP, irrigationStrategy.evaluateAction("", 280.0));
     }
 
     @Test
-    public void shouldDoNothingTest() throws Exception {
+    public void shouldDoNothingTest() {
         Assertions.assertEquals(IrrigationAction.NOTHING, irrigationStrategy.evaluateAction("", 220.0));
     }
 

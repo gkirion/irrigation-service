@@ -1,5 +1,6 @@
 package com.george.service;
 
+import com.george.exception.PlaceNotFoundException;
 import com.george.model.LandStatus;
 import com.george.model.Place;
 import com.george.model.SensorReading;
@@ -19,8 +20,8 @@ public class SensorReadingService {
     @Autowired
     private PlaceRepository placeRepository;
 
-    public SensorReading insert(LandStatus landStatus) throws Exception {
-        Place place = placeRepository.findByName(landStatus.getPlace()).orElseThrow(() -> new Exception("place " + landStatus.getPlace() + " does not exist"));
+    public SensorReading insert(LandStatus landStatus) throws PlaceNotFoundException {
+        Place place = placeRepository.findByName(landStatus.getPlace()).orElseThrow(() -> new PlaceNotFoundException("place " + landStatus.getPlace() + " does not exist"));
         SensorReading sensorReading = new SensorReading();
         sensorReading.setPlace(place);
         sensorReading.setTimestamp(new Date());
