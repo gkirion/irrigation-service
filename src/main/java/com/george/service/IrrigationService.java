@@ -12,14 +12,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeoutException;
 
 @Service
-public class IrrigationService implements CommandLineRunner {
+public class IrrigationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IrrigationService.class);
 
@@ -38,13 +40,15 @@ public class IrrigationService implements CommandLineRunner {
     @Autowired
     private SensorReadingService sensorReadingService;
 
-    @Override
-    public void run(String... args) throws Exception {
+    private Channel channel;
+
+    @PostConstruct
+    private void init() throws IOException, TimeoutException {
         ConnectionFactory connectionFactory = new ConnectionFactory();
         LOGGER.info("{}", InetAddress.getLocalHost());
         connectionFactory.setHost(rabbitMQHost);
         Connection connection = connectionFactory.newConnection();
-        Channel channel = connection.createChannel();
+        channel = connection.createChannel();
         channel.queueDeclare(QUEUE_NAME, false, false, false, null);
 
         AMQP.Exchange.DeclareOk declareOk = channel.exchangeDeclare(EXCHANGE_NAME, "direct");
@@ -65,16 +69,19 @@ public class IrrigationService implements CommandLineRunner {
             IrrigationAction irrigationAction = irrigationStrategy.evaluateAction(landStatus.getPlace(), landStatus.getMoisture());
 
             if (irrigationStatus == IrrigationStatus.OFF && irrigationAction == IrrigationAction.START) {
-                LOGGER.info("setting irrigation status to: {}", IrrigationStatus.ON);
-                channel.basicPublish(EXCHANGE_NAME, landStatus.getPlace(), null, OBJECT_MAPPER.writeValueAsBytes(IrrigationStatus.ON));
+                setIrrigationStatus(landStatus.getPlace(), IrrigationStatus.ON);
 
             } else if (irrigationStatus == IrrigationStatus.ON && irrigationAction == IrrigationAction.STOP) {
-                LOGGER.info("setting irrigation status to: {}", IrrigationStatus.OFF);
-                channel.basicPublish(EXCHANGE_NAME, landStatus.getPlace(), null, OBJECT_MAPPER.writeValueAsBytes(IrrigationStatus.OFF));
+                setIrrigationStatus(landStatus.getPlace(), IrrigationStatus.OFF);
             }
 
 
         }, consumerTag -> { LOGGER.info("consumer shutdown"); });
+    }
+
+    public void setIrrigationStatus(String place, IrrigationStatus irrigationStatus) throws IOException {
+        LOGGER.info("setting irrigation status to: {}", irrigationStatus);
+        channel.basicPublish(EXCHANGE_NAME, place, null, OBJECT_MAPPER.writeValueAsBytes(irrigationStatus));
     }
 
 }
