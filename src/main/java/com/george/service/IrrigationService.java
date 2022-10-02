@@ -18,6 +18,8 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 @Service
@@ -41,6 +43,8 @@ public class IrrigationService {
     private SensorReadingService sensorReadingService;
 
     private Channel channel;
+
+    private Map<String, IrrigationStatus> irrigationStatusMap = new HashMap<>();
 
     @PostConstruct
     private void init() throws IOException, TimeoutException {
@@ -69,19 +73,38 @@ public class IrrigationService {
             IrrigationAction irrigationAction = irrigationStrategy.evaluateAction(landStatus.getPlace(), landStatus.getMoisture());
 
             if (irrigationStatus == IrrigationStatus.OFF && irrigationAction == IrrigationAction.START) {
-                setIrrigationStatus(landStatus.getPlace(), IrrigationStatus.ON);
+                startIrrigation(landStatus.getPlace());
 
             } else if (irrigationStatus == IrrigationStatus.ON && irrigationAction == IrrigationAction.STOP) {
-                setIrrigationStatus(landStatus.getPlace(), IrrigationStatus.OFF);
+                stopIrrigation(landStatus.getPlace());
             }
+
+            setIrrigationStatus(landStatus.getPlace(), landStatus.getIrrigationStatus());
 
 
         }, consumerTag -> { LOGGER.info("consumer shutdown"); });
     }
 
-    public void setIrrigationStatus(String place, IrrigationStatus irrigationStatus) throws IOException {
-        LOGGER.info("setting irrigation status to: {}", irrigationStatus);
-        channel.basicPublish(EXCHANGE_NAME, place, null, OBJECT_MAPPER.writeValueAsBytes(irrigationStatus));
+    public void startIrrigation(String place) throws IOException {
+        LOGGER.info("starting irrigation on place: {}", place);
+        channel.basicPublish(EXCHANGE_NAME, place, null, OBJECT_MAPPER.writeValueAsBytes(IrrigationStatus.ON));
+    }
+
+    public void stopIrrigation(String place) throws IOException {
+        LOGGER.info("stopping irrigation on place: {}", place);
+        channel.basicPublish(EXCHANGE_NAME, place, null, OBJECT_MAPPER.writeValueAsBytes(IrrigationStatus.OFF));
+    }
+
+    public IrrigationStatus getIrrigationStatus(String place) {
+        synchronized (irrigationStatusMap){
+            return irrigationStatusMap.get(place);
+        }
+    }
+
+    public void setIrrigationStatus(String place, IrrigationStatus irrigationStatus) {
+        synchronized (irrigationStatusMap) {
+            irrigationStatusMap.put(place, irrigationStatus);
+        }
     }
 
 }

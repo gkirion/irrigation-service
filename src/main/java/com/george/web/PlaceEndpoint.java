@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping(value = "/place", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/places", produces = MediaType.APPLICATION_JSON_VALUE)
 public class PlaceEndpoint {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PlaceEndpoint.class);
