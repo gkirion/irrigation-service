@@ -68,42 +68,32 @@ public class IrrigationService {
             LOGGER.info("{}", landStatus);
 
             sensorReadingService.insert(landStatus);
+            synchronized (irrigationStatusMap) {
+                irrigationStatusMap.put(landStatus.getPlace(), landStatus.getIrrigationStatus());
+            }
 
             IrrigationStatus irrigationStatus = landStatus.getIrrigationStatus();
             IrrigationAction irrigationAction = irrigationStrategy.evaluateAction(landStatus.getPlace(), landStatus.getMoisture());
 
             if (irrigationStatus == IrrigationStatus.OFF && irrigationAction == IrrigationAction.START) {
-                startIrrigation(landStatus.getPlace());
+                setIrrigationStatus(landStatus.getPlace(), IrrigationStatus.ON);
 
             } else if (irrigationStatus == IrrigationStatus.ON && irrigationAction == IrrigationAction.STOP) {
-                stopIrrigation(landStatus.getPlace());
+                setIrrigationStatus(landStatus.getPlace(), IrrigationStatus.OFF);
             }
-
-            setIrrigationStatus(landStatus.getPlace(), landStatus.getIrrigationStatus());
 
 
         }, consumerTag -> { LOGGER.info("consumer shutdown"); });
     }
 
-    public void startIrrigation(String place) throws IOException {
-        LOGGER.info("starting irrigation on place: {}", place);
-        channel.basicPublish(EXCHANGE_NAME, place, null, OBJECT_MAPPER.writeValueAsBytes(IrrigationStatus.ON));
-    }
-
-    public void stopIrrigation(String place) throws IOException {
-        LOGGER.info("stopping irrigation on place: {}", place);
-        channel.basicPublish(EXCHANGE_NAME, place, null, OBJECT_MAPPER.writeValueAsBytes(IrrigationStatus.OFF));
+    public void setIrrigationStatus(String place, IrrigationStatus irrigationStatus) throws IOException {
+        LOGGER.info("place: {}, setting irrigation status to: {}", place, irrigationStatus);
+        channel.basicPublish(EXCHANGE_NAME, place, null, OBJECT_MAPPER.writeValueAsBytes(irrigationStatus));
     }
 
     public IrrigationStatus getIrrigationStatus(String place) {
         synchronized (irrigationStatusMap){
             return irrigationStatusMap.get(place);
-        }
-    }
-
-    public void setIrrigationStatus(String place, IrrigationStatus irrigationStatus) {
-        synchronized (irrigationStatusMap) {
-            irrigationStatusMap.put(place, irrigationStatus);
         }
     }
 

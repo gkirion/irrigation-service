@@ -15,19 +15,14 @@ public class IrrigationServiceEndpoint {
     @Autowired
     private IrrigationService irrigationService;
 
-    @GetMapping(value = "/status")
+    @GetMapping
     public IrrigationStatus getIrrigationStatus(@PathVariable String name) {
         return irrigationService.getIrrigationStatus(name);
     }
 
-    @PostMapping(value = "/start")
-    public void startIrrigation(@PathVariable String name) throws IOException {
-        irrigationService.startIrrigation(name);
-    }
-
-    @PostMapping(value = "/stop")
-    public void stopIrrigation(@PathVariable String name) throws IOException {
-        irrigationService.stopIrrigation(name);
+    @PutMapping
+    public void setIrrigationStatus(@PathVariable String name, @RequestBody IrrigationStatus irrigationStatus) throws IOException {
+        irrigationService.setIrrigationStatus(name, irrigationStatus);
     }
 
 }
