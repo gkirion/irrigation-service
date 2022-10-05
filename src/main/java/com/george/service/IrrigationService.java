@@ -92,7 +92,7 @@ public class IrrigationService {
     }
 
     public IrrigationStatus getIrrigationStatus(String place) {
-        synchronized (irrigationStatusMap){
+        synchronized (irrigationStatusMap) {
             return irrigationStatusMap.get(place);
         }
     }
