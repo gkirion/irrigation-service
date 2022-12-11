@@ -26,8 +26,8 @@ public class SensorReading {
     @Column(name = "timestamp", nullable = false)
     private Date timestamp;
 
-    @Column(name = "value", nullable = false)
-    private Double value;
+    @Column(name = "moisture", nullable = false)
+    private Double moisture;
 
     public Long getId() {
         return id;
@@ -53,12 +53,12 @@ public class SensorReading {
         this.timestamp = timestamp;
     }
 
-    public Double getValue() {
-        return value;
+    public Double getMoisture() {
+        return moisture;
     }
 
-    public void setValue(Double value) {
-        this.value = value;
+    public void setMoisture(Double moisture) {
+        this.moisture = moisture;
     }
 
     @Override
@@ -69,12 +69,12 @@ public class SensorReading {
         return Objects.equals(id, that.id) &&
                 Objects.equals(place, that.place) &&
                 Objects.equals(timestamp, that.timestamp) &&
-                Objects.equals(value, that.value);
+                Objects.equals(moisture, that.moisture);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, place, timestamp, value);
+        return Objects.hash(id, place, timestamp, moisture);
     }
 
     @Override
@@ -83,7 +83,7 @@ public class SensorReading {
                 "id=" + id +
                 ", place=" + place +
                 ", timestamp=" + timestamp +
-                ", value=" + value +
+                ", moisture=" + moisture +
                 '}';
     }
 

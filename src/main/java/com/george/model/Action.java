@@ -1,6 +1,6 @@
 package com.george.model;
 
-public enum IrrigationAction {
+public enum Action {
 
     START, STOP, NOTHING
 

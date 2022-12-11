@@ -1,9 +1,9 @@
 package com.george.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.george.model.IrrigationAction;
-import com.george.model.IrrigationStatus;
+import com.george.model.Action;
 import com.george.model.LandStatus;
+import com.george.model.Status;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -18,8 +18,7 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 
 @Service
@@ -42,9 +41,10 @@ public class IrrigationService {
     @Autowired
     private SensorReadingService sensorReadingService;
 
-    private Channel channel;
+    @Autowired
+    private IrrigationStatusService irrigationStatusService;
 
-    private Map<String, IrrigationStatus> irrigationStatusMap = new HashMap<>();
+    private Channel channel;
 
     @PostConstruct
     private void init() throws IOException, TimeoutException {
@@ -67,34 +67,31 @@ public class IrrigationService {
             LandStatus landStatus = OBJECT_MAPPER.readValue(message, LandStatus.class);
             LOGGER.info("{}", landStatus);
 
-            sensorReadingService.insert(landStatus);
-            synchronized (irrigationStatusMap) {
-                irrigationStatusMap.put(landStatus.getPlace(), landStatus.getIrrigationStatus());
-            }
+            sensorReadingService.insert(landStatus.getPlace(), landStatus.getMoisture());
+            irrigationStatusService.updateIrrigationStatus(landStatus.getPlace(), landStatus.getIrrigationStatus());
 
-            IrrigationStatus irrigationStatus = landStatus.getIrrigationStatus();
-            IrrigationAction irrigationAction = irrigationStrategy.evaluateAction(landStatus.getPlace(), landStatus.getMoisture());
+            Status irrigationStatus = landStatus.getIrrigationStatus();
+            Action irrigationAction = irrigationStrategy.evaluateAction(landStatus.getPlace(), landStatus.getMoisture());
 
-            if (irrigationStatus == IrrigationStatus.OFF && irrigationAction == IrrigationAction.START) {
-                setIrrigationStatus(landStatus.getPlace(), IrrigationStatus.ON);
+            if (irrigationStatus == Status.OFF && irrigationAction == Action.START) {
+                setIrrigationStatus(landStatus.getPlace(), Status.ON);
 
-            } else if (irrigationStatus == IrrigationStatus.ON && irrigationAction == IrrigationAction.STOP) {
-                setIrrigationStatus(landStatus.getPlace(), IrrigationStatus.OFF);
+            } else if (irrigationStatus == Status.ON && irrigationAction == Action.STOP) {
+                setIrrigationStatus(landStatus.getPlace(), Status.OFF);
             }
 
 
         }, consumerTag -> { LOGGER.info("consumer shutdown"); });
     }
 
-    public void setIrrigationStatus(String place, IrrigationStatus irrigationStatus) throws IOException {
+    public void setIrrigationStatus(String place, Status irrigationStatus) throws IOException {
         LOGGER.info("place: {}, setting irrigation status to: {}", place, irrigationStatus);
         channel.basicPublish(EXCHANGE_NAME, place, null, OBJECT_MAPPER.writeValueAsBytes(irrigationStatus));
     }
 
-    public IrrigationStatus getIrrigationStatus(String place) {
-        synchronized (irrigationStatusMap) {
-            return irrigationStatusMap.get(place);
-        }
+    public Optional<Status> getIrrigationStatus(String placeName) {
+        return irrigationStatusService.getIrrigationStatus(placeName)
+                .map(irrigationStatus -> irrigationStatus.getStatus());
     }
 
 }

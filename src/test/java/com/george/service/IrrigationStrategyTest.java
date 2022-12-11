@@ -1,7 +1,7 @@
 package com.george.service;
 
 import com.george.exception.PlaceNotFoundException;
-import com.george.model.IrrigationAction;
+import com.george.model.Action;
 import com.george.model.Place;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,17 +39,17 @@ public class IrrigationStrategyTest {
 
     @Test
     public void shouldStartIrrigationTest() {
-        Assertions.assertEquals(IrrigationAction.START, irrigationStrategy.evaluateAction("", 180.0));
+        Assertions.assertEquals(Action.START, irrigationStrategy.evaluateAction("", 180.0));
     }
 
     @Test
     public void shouldStopIrrigationTest() {
-        Assertions.assertEquals(IrrigationAction.STOP, irrigationStrategy.evaluateAction("", 280.0));
+        Assertions.assertEquals(Action.STOP, irrigationStrategy.evaluateAction("", 280.0));
     }
 
     @Test
     public void shouldDoNothingTest() {
-        Assertions.assertEquals(IrrigationAction.NOTHING, irrigationStrategy.evaluateAction("", 220.0));
+        Assertions.assertEquals(Action.NOTHING, irrigationStrategy.evaluateAction("", 220.0));
     }
 
 }
