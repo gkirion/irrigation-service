@@ -1,6 +1,7 @@
 package com.george.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.george.exception.PlaceNotFoundException;
 import com.george.model.Action;
 import com.george.model.LandStatus;
 import com.george.model.Status;
@@ -49,7 +50,7 @@ public class IrrigationService {
     @PostConstruct
     private void init() throws IOException, TimeoutException {
         ConnectionFactory connectionFactory = new ConnectionFactory();
-        LOGGER.info("{}", InetAddress.getLocalHost());
+        LOGGER.info("local address: {}, connecting to: {}", InetAddress.getLocalHost(), rabbitMQHost);
         connectionFactory.setHost(rabbitMQHost);
         Connection connection = connectionFactory.newConnection();
         channel = connection.createChannel();
@@ -62,26 +63,36 @@ public class IrrigationService {
         channel.basicConsume(QUEUE_NAME, true, (consumerTag, delivery) -> {
 
             String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-            LOGGER.info("consumerTag: {}", consumerTag);
-            LOGGER.info("message: {}", message);
+            LOGGER.info("consumerTag: {}, message: {}", consumerTag, message);
             LandStatus landStatus = OBJECT_MAPPER.readValue(message, LandStatus.class);
-            LOGGER.info("{}", landStatus);
+            LOGGER.info("land status: {}", landStatus);
 
-            sensorReadingService.insert(landStatus.getPlace(), landStatus.getMoisture());
-            irrigationStatusService.updateIrrigationStatus(landStatus.getPlace(), landStatus.getIrrigationStatus());
+            try {
+                consume(landStatus);
 
-            Status irrigationStatus = landStatus.getIrrigationStatus();
-            Action irrigationAction = irrigationStrategy.evaluateAction(landStatus.getPlace(), landStatus.getMoisture());
-
-            if (irrigationStatus == Status.OFF && irrigationAction == Action.START) {
-                setIrrigationStatus(landStatus.getPlace(), Status.ON);
-
-            } else if (irrigationStatus == Status.ON && irrigationAction == Action.STOP) {
-                setIrrigationStatus(landStatus.getPlace(), Status.OFF);
+            } catch (PlaceNotFoundException placeNotFoundException) {
+                LOGGER.error("place not found", placeNotFoundException);
+            } catch (IOException ioException) {
+                LOGGER.error("could not send data", ioException);
             }
 
-
         }, consumerTag -> { LOGGER.info("consumer shutdown"); });
+    }
+
+    private void consume(LandStatus landStatus) throws IOException {
+        sensorReadingService.insert(landStatus.getPlace(), landStatus.getMoisture());
+        irrigationStatusService.updateIrrigationStatus(landStatus.getPlace(), landStatus.getIrrigationStatus());
+
+        Status irrigationStatus = landStatus.getIrrigationStatus();
+        Action irrigationAction = irrigationStrategy.evaluateAction(landStatus.getPlace(), landStatus.getMoisture());
+
+        if (irrigationStatus == Status.OFF && irrigationAction == Action.START) {
+            setIrrigationStatus(landStatus.getPlace(), Status.ON);
+
+        } else if (irrigationStatus == Status.ON && irrigationAction == Action.STOP) {
+            setIrrigationStatus(landStatus.getPlace(), Status.OFF);
+        }
+
     }
 
     public void setIrrigationStatus(String place, Status irrigationStatus) throws IOException {
