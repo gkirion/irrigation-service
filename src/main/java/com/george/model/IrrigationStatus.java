@@ -5,18 +5,19 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
+import java.util.UUID;
 
 @Entity
 @Table(name = "irrigation_status")
 public class IrrigationStatus {
 
     @Id
-    @GeneratedValue
-    @Column(name = "id")
-    private Long id;
+    @Column(name = "place_id")
+    private UUID id;
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "place_id")
+    @JoinColumn(name = "place_id", columnDefinition = "BINARY(16)")
+    @MapsId
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JsonIgnore
     private Place place;
@@ -25,11 +26,11 @@ public class IrrigationStatus {
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
