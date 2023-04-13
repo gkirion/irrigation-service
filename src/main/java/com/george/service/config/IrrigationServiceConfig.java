@@ -1,6 +1,5 @@
 package com.george.service.config;
 
-import com.george.service.IrrigationService;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -17,7 +16,7 @@ import java.util.concurrent.TimeoutException;
 @Configuration
 public class IrrigationServiceConfig {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(IrrigationService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(IrrigationServiceConfig.class);
 
     @Value("${rabbitmq-host:localhost}")
     private String rabbitMQHost;
