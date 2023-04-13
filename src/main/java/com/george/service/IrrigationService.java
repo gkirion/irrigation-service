@@ -7,20 +7,15 @@ import com.george.model.LandStatus;
 import com.george.model.Status;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
-import java.util.concurrent.TimeoutException;
 
 @Service
 public class IrrigationService {
@@ -33,9 +28,6 @@ public class IrrigationService {
 
     private static final String EXCHANGE_NAME = "commands-exchange";
 
-    @Value("${rabbitmq-host:localhost}")
-    private String rabbitMQHost;
-
     @Autowired
     private IrrigationStrategy irrigationStrategy;
 
@@ -45,15 +37,11 @@ public class IrrigationService {
     @Autowired
     private IrrigationStatusService irrigationStatusService;
 
+    @Autowired
     private Channel channel;
 
     @PostConstruct
-    private void init() throws IOException, TimeoutException {
-        ConnectionFactory connectionFactory = new ConnectionFactory();
-        LOGGER.info("local address: {}, connecting to: {}", InetAddress.getLocalHost(), rabbitMQHost);
-        connectionFactory.setHost(rabbitMQHost);
-        Connection connection = connectionFactory.newConnection();
-        channel = connection.createChannel();
+    private void init() throws IOException {
         channel.queueDeclare(QUEUE_NAME, false, false, false, null);
 
         AMQP.Exchange.DeclareOk declareOk = channel.exchangeDeclare(EXCHANGE_NAME, "direct");
