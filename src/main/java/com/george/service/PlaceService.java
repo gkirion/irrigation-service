@@ -63,30 +63,6 @@ public class PlaceService {
         return placeRepository.save(place);
     }
 
-    public Place updateName(UUID id, Place updatedPlace) throws PlaceNotFoundException, IllegalArgumentException {
-        LOGGER.info("update place name with id: {}", id);
-        Place place = placeRepository.findById(id).orElseThrow(() -> new PlaceNotFoundException("place with id " + id + " does not exist"));
-
-        place.setName(updatedPlace.getName());
-        if (place.getName() == null || place.getName().isBlank()) {
-            throw new IllegalArgumentException("place name can't be empty");
-        }
-        return placeRepository.save(place);
-    }
-
-    public Place updateThresholds(UUID id, Place updatedPlace) throws PlaceNotFoundException, InvalidThresholdsException {
-        LOGGER.info("update thresholds of place with id: {}", id);
-        Place place = placeRepository.findById(id).orElseThrow(() -> new PlaceNotFoundException("place with id " + id + " does not exist"));
-
-        place.setMinMoistureThreshold(updatedPlace.getMinMoistureThreshold());
-        place.setMaxMoistureThreshold(updatedPlace.getMaxMoistureThreshold());
-
-        if (!isValidThresholds(place.getMinMoistureThreshold(), place.getMaxMoistureThreshold())) {
-            throw new InvalidThresholdsException("min moisture threshold must be less than max moisture threshold");
-        }
-        return placeRepository.save(place);
-    }
-
     /**
      * @param minMoistureThreshold the min moisture, any value below that will activate irrigation.
      * @param maxMoistureThreshold the max moisture, any value above that will deactivate irrigation.
@@ -94,6 +70,7 @@ public class PlaceService {
      * @throws IllegalArgumentException if min or max threshold is null
      */
     private boolean isValidThresholds(Double minMoistureThreshold, Double maxMoistureThreshold) {
+
         if (minMoistureThreshold == null || maxMoistureThreshold == null) {
             throw new IllegalArgumentException("both min and max threshold must be specified");
         }

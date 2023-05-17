@@ -24,7 +24,7 @@ public class PlaceEndpoint {
     private PlaceService placeService;
 
     @GetMapping
-    @Timed(value = "places.all", percentiles = {0.05, 0.95, 1.00} )
+    @Timed(value = "places.all", percentiles = {0.05, 0.95, 1.00})
     public List<Place> getAllPlaces() {
         return placeService.findAll();
     }
@@ -36,25 +36,15 @@ public class PlaceEndpoint {
     }
 
     @PostMapping
-    @Timed(value = "places.create")
+    @Timed(value = "places.create", percentiles = {0.05, 0.95, 1.00})
     public Place createPlace(@RequestBody Place place) throws InvalidThresholdsException {
         return placeService.create(place);
     }
 
     @PutMapping("/{id}")
-    @Timed(value = "places.update")
+    @Timed(value = "places.update", percentiles = {0.05, 0.95, 1.00})
     public Place update(@PathVariable UUID id, @RequestBody Place place) throws PlaceNotFoundException, InvalidThresholdsException {
         return placeService.update(id, place);
-    }
-
-    @PatchMapping("/{id}/name")
-    public Place updateName(@PathVariable UUID id, @RequestBody Place place) throws PlaceNotFoundException {
-        return placeService.updateName(id, place);
-    }
-
-    @PatchMapping("/{id}/thresholds")
-    public Place updateThresholds(@PathVariable UUID id, @RequestBody Place place) throws PlaceNotFoundException, InvalidThresholdsException {
-        return placeService.updateThresholds(id, place);
     }
 
 }
