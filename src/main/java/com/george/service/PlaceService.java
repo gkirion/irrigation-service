@@ -25,9 +25,7 @@ public class PlaceService {
         if (place.getName() == null || place.getName().isBlank()) {
             throw new IllegalArgumentException("place name can't be empty");
         }
-        if (!isValidThresholds(place.getMinMoistureThreshold(), place.getMaxMoistureThreshold())) {
-            throw new InvalidThresholdsException("min moisture threshold must be less than max moisture threshold");
-        }
+
         return placeRepository.save(place);
     }
 
@@ -51,33 +49,13 @@ public class PlaceService {
         Place place = placeRepository.findById(id).orElseThrow(() -> new PlaceNotFoundException("place with id " + id + " does not exist"));
 
         place.setName(updatedPlace.getName());
-        place.setMinMoistureThreshold(updatedPlace.getMinMoistureThreshold());
-        place.setMaxMoistureThreshold(updatedPlace.getMaxMoistureThreshold());
-
         if (place.getName() == null || place.getName().isBlank()) {
             throw new IllegalArgumentException("place name can't be empty");
         }
-        if (!isValidThresholds(place.getMinMoistureThreshold(), place.getMaxMoistureThreshold())) {
-            throw new InvalidThresholdsException("min moisture threshold must be less than max moisture threshold");
-        }
+
         return placeRepository.save(place);
     }
 
-    /**
-     * @param minMoistureThreshold the min moisture, any value below that will activate irrigation.
-     * @param maxMoistureThreshold the max moisture, any value above that will deactivate irrigation.
-     * @return false if minMoistureThreshold is not less than maxMoistureThreshold, true otherwise
-     * @throws IllegalArgumentException if min or max threshold is null
-     */
-    private boolean isValidThresholds(Double minMoistureThreshold, Double maxMoistureThreshold) {
 
-        if (minMoistureThreshold == null || maxMoistureThreshold == null) {
-            throw new IllegalArgumentException("both min and max threshold must be specified");
-        }
-        if (minMoistureThreshold >= maxMoistureThreshold) {
-            return false;
-        }
-        return true;
-    }
 
 }

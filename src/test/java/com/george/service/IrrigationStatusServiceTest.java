@@ -33,8 +33,6 @@ public class IrrigationStatusServiceTest {
     public void placeDoesNotHaveStatusReturnEmptyTest() {
         Place place = new Place();
         place.setName(PLACE_NAME);
-        place.setMinMoistureThreshold(0.0);
-        place.setMaxMoistureThreshold(0.0);
         placeRepository.save(place);
 
         Assertions.assertTrue(placeRepository.findByName(PLACE_NAME).isPresent());
@@ -45,8 +43,6 @@ public class IrrigationStatusServiceTest {
     public void placeDoesHaveStatusReturnStatusTest() {
         Place place = new Place();
         place.setName(PLACE_NAME);
-        place.setMinMoistureThreshold(0.0);
-        place.setMaxMoistureThreshold(0.0);
         placeRepository.save(place);
         IrrigationStatus irrigationStatus = new IrrigationStatus();
         irrigationStatus.setPlace(place);

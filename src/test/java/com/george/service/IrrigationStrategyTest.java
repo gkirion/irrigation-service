@@ -2,7 +2,7 @@ package com.george.service;
 
 import com.george.exception.PlaceNotFoundException;
 import com.george.model.Action;
-import com.george.model.Place;
+import com.george.model.MoistureThresholds;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,28 +12,30 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
+
 @ExtendWith(MockitoExtension.class)
 public class IrrigationStrategyTest {
 
     @Mock
-    private PlaceService placeService;
+    private MoistureThresholdsService moistureThresholdsService;
 
     @InjectMocks
     private IrrigationStrategy irrigationStrategy;
 
-    private Place place;
+    private MoistureThresholds moistureThresholds;
 
     @BeforeEach
     public void init() throws PlaceNotFoundException {
-        place = new Place();
-        place.setMinMoistureThreshold(200.0);
-        place.setMaxMoistureThreshold(250.0);
-        Mockito.when(placeService.findByName(Mockito.anyString())).thenReturn(place);
+        moistureThresholds = new MoistureThresholds();
+        moistureThresholds.setMinMoistureThreshold(200.0);
+        moistureThresholds.setMaxMoistureThreshold(250.0);
+        Mockito.when(moistureThresholdsService.getMoistureThresholds(Mockito.anyString())).thenReturn(Optional.of(moistureThresholds));
     }
 
     @Test
     public void placeNotFoundTest() {
-        Mockito.when(placeService.findByName(Mockito.anyString())).thenThrow(new PlaceNotFoundException(""));
+        Mockito.when(moistureThresholdsService.getMoistureThresholds(Mockito.anyString())).thenThrow(new PlaceNotFoundException(""));
         Assertions.assertThrows(PlaceNotFoundException.class, () -> irrigationStrategy.evaluateAction("", 180.0));
     }
 

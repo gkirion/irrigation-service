@@ -1,8 +1,8 @@
 package com.george.service;
 
-import com.george.exception.PlaceNotFoundException;
+import com.george.exception.ThresholdsNotFoundException;
 import com.george.model.Action;
-import com.george.model.Place;
+import com.george.model.MoistureThresholds;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -10,13 +10,13 @@ import org.springframework.stereotype.Service;
 public class IrrigationStrategy {
 
     @Autowired
-    private PlaceService placeService;
+    private MoistureThresholdsService moistureThresholdsService;
 
-    public Action evaluateAction(String placeName, Double moisture) throws PlaceNotFoundException {
+    public Action evaluateAction(String placeName, Double moisture) throws ThresholdsNotFoundException {
 
-        Place place = placeService.findByName(placeName);
-        Double minMoistureThreshold = place.getMinMoistureThreshold();
-        Double maxMoistureThreshold = place.getMaxMoistureThreshold();
+        MoistureThresholds moistureThresholds = moistureThresholdsService.getMoistureThresholds(placeName).orElseThrow(() -> new ThresholdsNotFoundException("No moisture thresholds found for place: " + placeName));
+        Double minMoistureThreshold = moistureThresholds.getMinMoistureThreshold();
+        Double maxMoistureThreshold = moistureThresholds.getMaxMoistureThreshold();
 
         if (moisture < minMoistureThreshold) {
             return Action.START;
