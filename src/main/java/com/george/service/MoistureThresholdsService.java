@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class MoistureThresholdsService {
@@ -22,10 +23,11 @@ public class MoistureThresholdsService {
     @Autowired
     private MoistureThresholdsRepository moistureThresholdsRepository;
 
-    public MoistureThresholds setMoistureThresholds(String placeName, MoistureThresholds updatedMoistureThresholds) {
-        LOGGER.info("updating moisture thresholds of place: {} with value: {}", placeName, updatedMoistureThresholds);
-        Place place = placeService.findByName(placeName);
-        MoistureThresholds moistureThresholds = moistureThresholdsRepository.findByPlaceName(placeName).orElse(new MoistureThresholds());
+    public MoistureThresholds setMoistureThresholds(UUID id, MoistureThresholds updatedMoistureThresholds) {
+
+        LOGGER.info("updating moisture thresholds of place: {} with value: {}", id, updatedMoistureThresholds);
+        Place place = placeService.findById(id);
+        MoistureThresholds moistureThresholds = moistureThresholdsRepository.findById(id).orElse(new MoistureThresholds());
 
         if (!isValidThresholds(updatedMoistureThresholds.getMinMoistureThreshold(), updatedMoistureThresholds.getMaxMoistureThreshold())) {
             throw new InvalidThresholdsException("min moisture threshold must be less than max moisture threshold");
@@ -39,6 +41,10 @@ public class MoistureThresholdsService {
 
     public Optional<MoistureThresholds> getMoistureThresholds(String name) {
         return moistureThresholdsRepository.findByPlaceName(name);
+    }
+
+    public Optional<MoistureThresholds> getMoistureThresholds(UUID id) {
+        return moistureThresholdsRepository.findById(id);
     }
 
     /**

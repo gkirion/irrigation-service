@@ -4,6 +4,7 @@ import com.george.exception.PlaceNotFoundException;
 import com.george.model.Place;
 import com.george.repository.PlaceRepository;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -23,10 +24,20 @@ public class PlaceServiceTest {
     @InjectMocks
     private PlaceService placeService;
 
+    private Place place;
+
+    private final String PLACE_NAME = "my pot";
+
+    @BeforeEach
+    public void init() {
+        place = new Place();
+        place.setName(PLACE_NAME);
+    }
+
     @Test
     public void placeNotFoundTest() {
         Mockito.when(placeRepository.findById(Mockito.any())).thenReturn(Optional.empty());
-        Assertions.assertThrows(PlaceNotFoundException.class, () -> placeService.update(UUID.randomUUID(), new Place()));
+        Assertions.assertThrows(PlaceNotFoundException.class, () -> placeService.update(UUID.randomUUID(), place));
     }
 
     @Test
@@ -36,8 +47,6 @@ public class PlaceServiceTest {
 
     @Test
     public void placeOkTest() {
-        Place place = new Place();
-        place.setName("my pot");
         Assertions.assertDoesNotThrow(() -> placeService.create(place));
     }
 

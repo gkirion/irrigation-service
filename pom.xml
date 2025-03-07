@@ -59,7 +59,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.george</groupId>
+            <groupId>com.george</groupId>
             <artifactId>irrigation-common</artifactId>
             <version>1.2-SNAPSHOT</version>
         </dependency>

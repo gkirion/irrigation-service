@@ -14,7 +14,9 @@ public class IrrigationStrategy {
 
     public Action evaluateAction(String placeName, Double moisture) throws ThresholdsNotFoundException {
 
-        MoistureThresholds moistureThresholds = moistureThresholdsService.getMoistureThresholds(placeName).orElseThrow(() -> new ThresholdsNotFoundException("No moisture thresholds found for place: " + placeName));
+        MoistureThresholds moistureThresholds = moistureThresholdsService
+                .getMoistureThresholds(placeName)
+                .orElseThrow(() -> new ThresholdsNotFoundException("No moisture thresholds found for place: " + placeName));
         Double minMoistureThreshold = moistureThresholds.getMinMoistureThreshold();
         Double maxMoistureThreshold = moistureThresholds.getMaxMoistureThreshold();
 

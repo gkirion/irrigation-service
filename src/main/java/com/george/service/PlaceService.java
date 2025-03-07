@@ -21,6 +21,7 @@ public class PlaceService {
     private PlaceRepository placeRepository;
 
     public Place create(Place place) throws IllegalArgumentException, InvalidThresholdsException {
+
         LOGGER.info("creating place {}", place);
         if (place.getName() == null || place.getName().isBlank()) {
             throw new IllegalArgumentException("place name can't be empty");
@@ -45,17 +46,15 @@ public class PlaceService {
     }
 
     public Place update(UUID id, Place updatedPlace) throws PlaceNotFoundException, IllegalArgumentException, InvalidThresholdsException {
-        LOGGER.info("update place with id: {}", id);
-        Place place = placeRepository.findById(id).orElseThrow(() -> new PlaceNotFoundException("place with id " + id + " does not exist"));
 
-        place.setName(updatedPlace.getName());
-        if (place.getName() == null || place.getName().isBlank()) {
+        LOGGER.info("update place with id: {}", id);
+        if (updatedPlace.getName() == null || updatedPlace.getName().isBlank()) {
             throw new IllegalArgumentException("place name can't be empty");
         }
 
+        Place place = placeRepository.findById(id).orElseThrow(() -> new PlaceNotFoundException("place with id " + id + " does not exist"));
+        place.setName(updatedPlace.getName());
         return placeRepository.save(place);
     }
-
-
 
 }

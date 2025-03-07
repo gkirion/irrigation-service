@@ -12,6 +12,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.UUID;
+
 @ExtendWith(MockitoExtension.class)
 public class MoistureThresholdsServiceTest {
 
@@ -24,19 +26,19 @@ public class MoistureThresholdsServiceTest {
     @InjectMocks
     private MoistureThresholdsService moistureThresholdsService;
 
-    private final String PLACE_NAME = "a place";
+    private final UUID PLACE_ID = UUID.randomUUID();
 
     @Test
     public void placeNotFoundTest() {
-        Mockito.when(placeService.findByName(Mockito.any())).thenThrow(PlaceNotFoundException.class);
-        Assertions.assertThrows(PlaceNotFoundException.class, () -> moistureThresholdsService.setMoistureThresholds(PLACE_NAME, new MoistureThresholds()));
+        Mockito.when(placeService.findById(Mockito.any())).thenThrow(PlaceNotFoundException.class);
+        Assertions.assertThrows(PlaceNotFoundException.class, () -> moistureThresholdsService.setMoistureThresholds(PLACE_ID, new MoistureThresholds()));
     }
 
     @Test
     public void placeThresholdMissingTest() {
         MoistureThresholds moistureThresholds = new MoistureThresholds();
         moistureThresholds.setMinMoistureThreshold(200.0);
-        Assertions.assertThrows(IllegalArgumentException.class, () -> moistureThresholdsService.setMoistureThresholds(PLACE_NAME, moistureThresholds));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> moistureThresholdsService.setMoistureThresholds(PLACE_ID, moistureThresholds));
     }
 
     @Test
@@ -44,7 +46,7 @@ public class MoistureThresholdsServiceTest {
         MoistureThresholds moistureThresholds = new MoistureThresholds();
         moistureThresholds.setMinMoistureThreshold(200.0);
         moistureThresholds.setMaxMoistureThreshold(200.0);
-        Assertions.assertThrows(InvalidThresholdsException.class, () -> moistureThresholdsService.setMoistureThresholds(PLACE_NAME, moistureThresholds));
+        Assertions.assertThrows(InvalidThresholdsException.class, () -> moistureThresholdsService.setMoistureThresholds(PLACE_ID, moistureThresholds));
     }
 
     @Test
@@ -52,7 +54,7 @@ public class MoistureThresholdsServiceTest {
         MoistureThresholds moistureThresholds = new MoistureThresholds();
         moistureThresholds.setMinMoistureThreshold(250.0);
         moistureThresholds.setMaxMoistureThreshold(200.0);
-        Assertions.assertThrows(InvalidThresholdsException.class, () -> moistureThresholdsService.setMoistureThresholds(PLACE_NAME, moistureThresholds));
+        Assertions.assertThrows(InvalidThresholdsException.class, () -> moistureThresholdsService.setMoistureThresholds(PLACE_ID, moistureThresholds));
     }
 
     @Test
@@ -60,7 +62,7 @@ public class MoistureThresholdsServiceTest {
         MoistureThresholds moistureThresholds = new MoistureThresholds();
         moistureThresholds.setMinMoistureThreshold(200.0);
         moistureThresholds.setMaxMoistureThreshold(250.0);
-        Assertions.assertDoesNotThrow(() -> moistureThresholdsService.setMoistureThresholds(PLACE_NAME, moistureThresholds));
+        Assertions.assertDoesNotThrow(() -> moistureThresholdsService.setMoistureThresholds(PLACE_ID, moistureThresholds));
     }
 
 }

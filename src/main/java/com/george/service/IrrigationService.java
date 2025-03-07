@@ -3,6 +3,7 @@ package com.george.service;
 import com.george.exception.PlaceNotFoundException;
 import com.george.model.Action;
 import com.george.model.LandStatus;
+import com.george.model.Place;
 import com.george.model.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class IrrigationService implements LandStatusListener {
@@ -26,6 +28,9 @@ public class IrrigationService implements LandStatusListener {
     @Autowired
     private IrrigationStatusService irrigationStatusService;
 
+    @Autowired
+    private PlaceService placeService;
+
     private IrrigationQueue irrigationQueue;
 
     public IrrigationService(IrrigationQueue irrigationQueue) {
@@ -37,6 +42,7 @@ public class IrrigationService implements LandStatusListener {
     public void receiveLandStatus(LandStatus landStatus) {
 
         try {
+
             sensorReadingService.insert(landStatus.getPlace(), landStatus.getMoisture());
             irrigationStatusService.updateIrrigationStatus(landStatus.getPlace(), landStatus.getIrrigationStatus());
 
@@ -65,8 +71,13 @@ public class IrrigationService implements LandStatusListener {
         }
     }
 
-    public Optional<Status> getIrrigationStatus(String placeName) {
-        return irrigationStatusService.getIrrigationStatus(placeName)
+    public void setIrrigationStatus(UUID id, Status irrigationStatus)  {
+        Place place = placeService.findById(id);
+        setIrrigationStatus(place.getName(), irrigationStatus);
+    }
+
+    public Optional<Status> getIrrigationStatus(UUID id) {
+        return irrigationStatusService.getIrrigationStatus(id)
                 .map(irrigationStatus -> irrigationStatus.getStatus());
     }
 

@@ -12,4 +12,6 @@ public interface MoistureThresholdsRepository extends JpaRepository<MoistureThre
 
     Optional<MoistureThresholds> findByPlaceName(String name);
 
+    Optional<MoistureThresholds> findByPlaceId(UUID id);
+
 }

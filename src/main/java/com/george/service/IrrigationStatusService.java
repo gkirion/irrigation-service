@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class IrrigationStatusService {
@@ -39,8 +40,12 @@ public class IrrigationStatusService {
         return irrigationStatusRepository.save(irrigationStatus);
     }
 
-    public Optional<IrrigationStatus> getIrrigationStatus(String name) {
-        return irrigationStatusRepository.findByPlaceName(name);
+    public Optional<IrrigationStatus> getIrrigationStatus(UUID id) {
+        return irrigationStatusRepository.findById(id);
+    }
+
+    public Optional<IrrigationStatus> getIrrigationStatus(String placeName) {
+        return irrigationStatusRepository.findByPlaceName(placeName);
     }
 
 }

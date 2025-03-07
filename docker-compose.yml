@@ -1,0 +1,38 @@
+version: '2'
+
+services:
+  irrigation-service:
+    image: irrigation-service
+    networks:
+      - irrigation-network
+    ports:
+      - 8092:8090
+    depends_on: 
+      - rabbitmq
+      - mysql-server
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3.10-management
+    container_name: rabbitmq
+    networks:
+      - irrigation-network
+    ports:
+      - 5672:5672
+      - 15672:15672
+
+  mysql-server:
+    image: mysql:latest
+    container_name: mysql-server
+    networks:
+      - irrigation-network
+    environment:
+      MYSQL_ROOT_PASSWORD: cskir88
+      MYSQL_DATABASE: irrigation-db
+      MYSQL_USER: gkirion
+      MYSQL_PASSWORD: cskir88
+
+networks:
+  irrigation-network:
+    name: irrigation-network
+    driver: bridge
