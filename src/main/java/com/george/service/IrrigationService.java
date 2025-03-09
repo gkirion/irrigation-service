@@ -1,6 +1,7 @@
 package com.george.service;
 
 import com.george.exception.PlaceNotFoundException;
+import com.george.exception.ThresholdsNotFoundException;
 import com.george.model.Action;
 import com.george.model.LandStatus;
 import com.george.model.Place;
@@ -58,6 +59,8 @@ public class IrrigationService implements LandStatusListener {
 
         } catch (PlaceNotFoundException placeNotFoundException) {
             LOGGER.warn("place not found", placeNotFoundException);
+        } catch (ThresholdsNotFoundException thresholdsNotFoundException) {
+            LOGGER.warn("no thresholds found", thresholdsNotFoundException);
         }
 
     }

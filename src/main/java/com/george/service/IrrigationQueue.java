@@ -1,5 +1,6 @@
 package com.george.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.george.model.LandStatus;
 import com.george.model.Status;
@@ -57,11 +58,17 @@ public class IrrigationQueue {
 
             String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
             LOGGER.info("consumerTag: {}, message: {}", consumerTag, message);
-            LandStatus landStatus = OBJECT_MAPPER.readValue(message, LandStatus.class);
-            LOGGER.info("land status: {}", landStatus);
+            try {
 
-            for (LandStatusListener landStatusListener : landStatusListeners) {
-                landStatusListener.receiveLandStatus(landStatus);
+                LandStatus landStatus = OBJECT_MAPPER.readValue(message, LandStatus.class);
+                LOGGER.info("land status: {}", landStatus);
+
+                for (LandStatusListener landStatusListener : landStatusListeners) {
+                    landStatusListener.receiveLandStatus(landStatus);
+                }
+
+            } catch (JsonProcessingException jsonProcessingException) {
+                LOGGER.warn("could not parse message", jsonProcessingException);
             }
 
         }, consumerTag -> { LOGGER.info("consumer shutdown"); });
